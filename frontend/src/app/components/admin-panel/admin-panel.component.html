@@ -1,0 +1,691 @@
+<div class="admin-panel">
+  <!-- Tab Navigation -->
+  <div class="nav-tabs-container">
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab === 'pending'"
+          (click)="onTabChange('pending')">
+          <i class="material-icons md-20">pending_actions</i>
+          Pending Requests
+        </button>
+      </li>
+      <li class="nav-item">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab === 'all'"
+          (click)="onTabChange('all')">
+          <i class="material-icons md-20">list</i>
+          All Requests
+        </button>
+      </li>
+      <li class="nav-item">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab === 'attendance'"
+          (click)="onTabChange('attendance')">
+          <i class="material-icons md-20">access_time</i>
+          Attendance
+        </button>
+      </li>
+      <li class="nav-item">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab === 'employees'"
+          (click)="onTabChange('employees')">
+          <i class="material-icons md-20">people</i>
+          Employees
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- Pending Requests Tab -->
+    <div *ngIf="activeTab === 'pending'" class="tab-pane active">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Pending Leave Requests</h4>
+      </div>
+      
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      
+      <div *ngIf="!isLoading && pendingRequests.length === 0" class="text-center py-5">
+        <i class="material-icons text-muted" style="font-size: 64px;">check_circle</i>
+        <h5 class="text-muted mt-3">No pending requests</h5>
+        <p class="text-muted">All leave requests have been processed.</p>
+      </div>
+      
+      <div *ngIf="!isLoading && pendingRequests.length > 0" class="row">
+        <div class="col-12 col-md-6 col-lg-4 mb-4" *ngFor="let request of pendingRequests">
+          <div class="card request-card h-100">
+            <div class="card-header">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h6 class="card-title mb-1">{{ request.leaveType }}</h6>
+                  <p class="card-text text-muted mb-0">{{ request.employeeName }}</p>
+                </div>
+                <span class="badge bg-warning text-dark">PENDING</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="employee-details mb-3">
+                <div class="detail-row">
+                  <strong>Date Range:</strong>
+                  <span class="duration-text">{{ request.startDate | date:'MMM d, y' }} to {{ request.endDate | date:'MMM d, y' }}</span>
+                </div>
+                <div class="detail-row">
+                  <strong>Days:</strong>
+                  {{ getDaysCount(request.startDate, request.endDate) }}
+                </div>
+              </div>
+              <div class="reason-section mb-3">
+                <strong>Reason:</strong>
+                <p class="reason-text mt-1 mb-0">{{ request.reason }}</p>
+              </div>
+              <div class="action-buttons d-flex gap-2">
+                <button class="btn btn-sm btn-outline-success flex-fill" (click)="openApprovalModal(request, 'approve')">
+                  <i class="material-icons me-1">check</i>
+                  Approve
+                </button>
+                <button class="btn btn-sm btn-outline-danger flex-fill" (click)="openApprovalModal(request, 'reject')">
+                  <i class="material-icons me-1">close</i>
+                  Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Requests Tab -->
+    <div *ngIf="activeTab === 'all'" class="tab-pane active">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>All Leave Requests</h4>
+      </div>
+      
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      
+      <div *ngIf="!isLoading && allLeaveRequests.length === 0" class="text-center py-5">
+        <i class="material-icons text-muted" style="font-size: 64px;">list</i>
+        <h5 class="text-muted mt-3">No leave requests found</h5>
+        <p class="text-muted">No leave requests have been submitted yet.</p>
+      </div>
+      
+      <!-- Traditional table-based UI for All Requests -->
+      <div *ngIf="!isLoading && allLeaveRequests.length > 0" class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Leave Type</th>
+              <th>Dates</th>
+              <th>Days</th>
+              <th>Status</th>
+              <th>Reason</th>
+              <th>Admin Comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let request of allLeaveRequests">
+              <td>
+                <!-- Make employee name clickable to show popup -->
+                <div class="employee-name clickable" (click)="openEmployeeDetail(request)">{{ request.employeeName }}</div>
+                <div class="employee-email">{{ request.employeeEmail }}</div>
+              </td>
+              <td>{{ request.leaveType }}</td>
+              <td>{{ request.startDate | date:'MMM d, y' }} to {{ request.endDate | date:'MMM d, y' }}</td>
+              <td>{{ getDaysCount(request.startDate, request.endDate) }}</td>
+              <td>
+                <span class="badge" [ngClass]="getStatusClass(request.status || '')">
+                  {{ request.status }}
+                </span>
+              </td>
+              <td class="reason-text">{{ request.reason }}</td>
+              <td>{{ request.adminComment || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Attendance Tab -->
+    <div *ngIf="activeTab === 'attendance'" class="tab-pane active">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Employee Attendance Records</h4>
+        <div class="d-flex gap-2">
+          <input type="date" class="form-control" [(ngModel)]="attendanceDateFilter" (change)="filterAttendanceRecords()" placeholder="Filter by date">
+          <select class="form-select" [(ngModel)]="attendanceStatusFilter" (change)="filterAttendanceRecords()">
+            <option value="">All Statuses</option>
+            <option value="Completed">Completed</option>
+            <option value="In Progress">In Progress</option>
+          </select>
+        </div>
+      </div>
+      
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      
+      <div *ngIf="!isLoading && attendanceRecords.length === 0" class="text-center py-5">
+        <i class="material-icons text-muted" style="font-size: 64px;">access_time</i>
+        <h5 class="text-muted mt-3">No attendance records found</h5>
+        <p class="text-muted">No attendance records have been submitted yet.</p>
+      </div>
+      
+      <!-- Professional Attendance Records Display -->
+      <div *ngIf="!isLoading && attendanceRecords.length > 0" class="attendance-container">
+        <div class="row g-4">
+          <div class="col-12" *ngFor="let record of filteredAttendanceRecords.length > 0 ? filteredAttendanceRecords : attendanceRecords">
+            <div class="card attendance-card shadow-sm">
+              <div class="card-header d-flex justify-content-between align-items-center bg-white">
+                <div class="employee-info">
+                  <h6 class="card-title mb-1">{{ getEmployeeName(record.userId) }}</h6>
+                  <p class="card-subtitle text-muted mb-0 small">{{ getEmployeeEmail(record.userId) }}</p>
+                </div>
+                <span class="badge rounded-pill" [ngClass]="getAttendanceStatusClass(record.status)">
+                  {{ record.status }}
+                </span>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <!-- Check In Details -->
+                  <div class="col-md-6 col-lg-5">
+                    <div class="detail-card checkin-card">
+                      <div class="detail-card-header text-success">
+                        <i class="material-icons me-2">login</i>
+                        <h6 class="detail-card-title mb-0">Check In</h6>
+                      </div>
+                      <div class="detail-card-body">
+                        <div class="detail-row compact">
+                          <span class="detail-label">Date:</span>
+                          <span class="detail-value">{{ record.date | date:'MMM d, y' }}</span>
+                        </div>
+                        <div class="detail-row compact">
+                          <span class="detail-label">Time:</span>
+                          <span class="detail-value">{{ record.checkInTime | date:'h:mm a' }}</span>
+                        </div>
+                        <div class="detail-row compact" *ngIf="record.latitude && record.longitude">
+                          <span class="detail-label">Location:</span>
+                          <span class="detail-value">
+                            <button class="btn btn-sm btn-outline-primary btn-compact" (click)="showLocation(record.latitude!, record.longitude!)">
+                              <i class="material-icons me-1">location_on</i>
+                              Map
+                            </button>
+                          </span>
+                        </div>
+                        <div class="detail-row compact" *ngIf="record.photo">
+                          <span class="detail-label">Photo:</span>
+                          <span class="detail-value">
+                            <button class="btn btn-sm btn-outline-secondary btn-compact" (click)="showPhoto(record.photo!)">
+                              <i class="material-icons me-1">photo_camera</i>
+                              View
+                            </button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Check Out Details -->
+                  <div class="col-md-6 col-lg-7">
+                    <div class="detail-card checkout-card">
+                      <div class="detail-card-header text-danger">
+                        <i class="material-icons me-2">logout</i>
+                        <h6 class="detail-card-title mb-0">Check Out</h6>
+                      </div>
+                      <div class="detail-card-body">
+                        <div class="detail-row compact">
+                          <span class="detail-label">Time:</span>
+                          <span class="detail-value">{{ record.checkOutTime ? (record.checkOutTime | date:'h:mm a') : 'Not checked out' }}</span>
+                        </div>
+                        <div class="detail-row compact" *ngIf="record.checkOutTime && record.latitude && record.longitude">
+                          <span class="detail-label">Location:</span>
+                          <span class="detail-value">
+                            <button class="btn btn-sm btn-outline-primary btn-compact" (click)="showLocation(record.latitude!, record.longitude!)">
+                              <i class="material-icons me-1">location_on</i>
+                              Map
+                            </button>
+                          </span>
+                        </div>
+                        <div class="detail-row compact" *ngIf="record.checkOutTime && record.checkOutPhoto && record.checkOutPhoto !== record.photo">
+                          <span class="detail-label">Photo:</span>
+                          <span class="detail-value">
+                            <button class="btn btn-sm btn-outline-secondary btn-compact" (click)="showPhoto(record.checkOutPhoto)">
+                              <i class="material-icons me-1">photo_camera</i>
+                              View
+                            </button>
+                          </span>
+                        </div>
+                        <div class="detail-row compact" *ngIf="record.checkOutTime && record.photo && record.checkOutPhoto === record.photo">
+                          <span class="detail-label">Photo:</span>
+                          <span class="detail-value text-warning">Same as check-in</span>
+                        </div>
+                        <div class="detail-row compact" *ngIf="record.checkOutTime && record.photo && !record.checkOutPhoto">
+                          <span class="detail-label">Photo:</span>
+                          <span class="detail-value text-warning">Using check-in photo</span>
+                        </div>
+                        <div class="detail-row compact" *ngIf="!record.checkOutTime">
+                          <span class="detail-label">Status:</span>
+                          <span class="detail-value text-muted">Pending</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-footer bg-light">
+                <small class="text-muted">
+                  Record ID: {{ record.id }} | Created: {{ record.checkInTime | date:'MMM d, y, h:mm a' }}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employees Tab -->
+    <div *ngIf="activeTab === 'employees'" class="tab-pane active">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Employee Leave Statistics</h4>
+        <div class="d-flex gap-2">
+          <select class="form-select" [(ngModel)]="selectedMonth" (change)="onMonthYearChange()">
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+          <select class="form-select" [(ngModel)]="selectedYear" (change)="onMonthYearChange()">
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+          </select>
+          <button class="btn btn-primary glass-button" (click)="openAddEmployeeModal()">
+            <i class="material-icons md-20">person_add</i>
+            Add Employee
+          </button>
+        </div>
+      </div>
+      
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      
+      <div *ngIf="!isLoading && employees.length === 0" class="text-center py-5">
+        <i class="material-icons text-muted" style="font-size: 64px;">people</i>
+        <h5 class="text-muted mt-3">No employees found</h5>
+        <p class="text-muted">No employees have been added to the system yet.</p>
+        <button class="btn btn-primary mt-3 glass-button" (click)="openAddEmployeeModal()">
+          <i class="material-icons md-20">person_add</i>
+          Add Your First Employee
+        </button>
+      </div>
+      
+      <div *ngIf="!isLoading && employees.length > 0" class="row">
+        <div class="col-12 col-md-6 col-lg-4 mb-4" *ngFor="let employee of employees">
+          <div class="card employee-card h-100">
+            <div class="card-header">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h6 class="card-title mb-1">{{ employee.firstName }} {{ employee.lastName }}</h6>
+                  <p class="card-text text-muted mb-0">{{ employee.email }}</p>
+                </div>
+                <span class="badge bg-primary">{{ employee.role }}</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="employee-details mb-3">
+                <div class="detail-row">
+                  <strong>Department:</strong>
+                  <span>{{ employee.department }}</span>
+                </div>
+                <div class="detail-row">
+                  <strong>Designation:</strong>
+                  <span>{{ employee.designation }}</span>
+                </div>
+              </div>
+              <div class="employee-stats">
+                <div class="stat-item">
+                  <span class="stat-label">Total Leaves:</span>
+                  <span class="stat-value">{{ employee.totalLeaves }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Leave Balance:</span>
+                  <span class="stat-value">{{ 20 - employee.totalLeaves }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer bg-light">
+              <div class="d-flex justify-content-end">
+                <button class="btn btn-sm btn-outline-danger" (click)="deleteEmployee(employee.id!, employee.firstName + ' ' + employee.lastName)">
+                  <i class="material-icons me-1">delete</i>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Approval Modal -->
+<div class="modal fade" [class.show]="selectedRequest && modalAction" [style.display]="selectedRequest && modalAction ? 'block' : 'none'" 
+     tabindex="-1" *ngIf="selectedRequest && modalAction">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm {{ modalAction === 'approve' ? 'Approval' : 'Rejection' }}</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3" *ngIf="selectedRequest">
+          <h6>{{ selectedRequest.employeeName }}</h6>
+          <p class="text-muted">{{ selectedRequest.leaveType }}</p>
+          <p class="mb-1"><strong>Dates:</strong> {{ selectedRequest.startDate | date:'MMM d, y' }} to {{ selectedRequest.endDate | date:'MMM d, y' }}</p>
+          <p class="mb-1"><strong>Days:</strong> {{ getDaysCount(selectedRequest.startDate || '', selectedRequest.endDate || '') }}</p>
+          <p class="mb-0"><strong>Reason:</strong> {{ selectedRequest.reason }}</p>
+        </div>
+        <div class="mb-3">
+          <label for="adminComment" class="form-label">Comment</label>
+          <textarea 
+            class="form-control" 
+            id="adminComment" 
+            rows="3" 
+            [(ngModel)]="adminComment"
+            placeholder="Add a comment (optional)"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button 
+          type="button" 
+          class="btn" 
+          [ngClass]="modalAction === 'approve' ? 'btn-success' : 'btn-danger'"
+          (click)="confirmAction()">
+          {{ modalAction === 'approve' ? 'Approve' : 'Reject' }} Request
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div class="modal fade" [class.show]="showAddEmployeeModal" [style.display]="showAddEmployeeModal ? 'block' : 'none'" 
+     tabindex="-1" *ngIf="showAddEmployeeModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content add-employee-modal">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="material-icons me-2">person_add</i>
+          Add New Employee
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeAddEmployeeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form #addEmployeeForm="ngForm" class="employee-form">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="firstName" class="form-label">
+                  <i class="material-icons me-1">person</i>
+                  First Name *
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control form-control-lg" 
+                  id="firstName" 
+                  name="firstName" 
+                  [(ngModel)]="newEmployee.firstName" 
+                  required
+                  placeholder="Enter first name"
+                  #firstName="ngModel">
+                <div *ngIf="firstName.invalid && firstName.touched" class="invalid-feedback d-block">
+                  <small>First name is required</small>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="lastName" class="form-label">
+                  <i class="material-icons me-1">person</i>
+                  Last Name *
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control form-control-lg" 
+                  id="lastName" 
+                  name="lastName" 
+                  [(ngModel)]="newEmployee.lastName" 
+                  required
+                  placeholder="Enter last name"
+                  #lastName="ngModel">
+                <div *ngIf="lastName.invalid && lastName.touched" class="invalid-feedback d-block">
+                  <small>Last name is required</small>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="form-group">
+                <label for="email" class="form-label">
+                  <i class="material-icons me-1">email</i>
+                  Email Address *
+                </label>
+                <input 
+                  type="email" 
+                  class="form-control form-control-lg" 
+                  id="email" 
+                  name="email" 
+                  [(ngModel)]="newEmployee.email" 
+                  required
+                  email
+                  placeholder="Enter email address"
+                  #email="ngModel">
+                <div *ngIf="email.invalid && email.touched" class="invalid-feedback d-block">
+                  <small *ngIf="email.errors?.['required']">Email is required</small>
+                  <small *ngIf="email.errors?.['email']">Please enter a valid email address</small>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="form-group">
+                <label for="password" class="form-label">
+                  <i class="material-icons me-1">lock</i>
+                  Password *
+                </label>
+                <input 
+                  type="password" 
+                  class="form-control form-control-lg" 
+                  id="password" 
+                  name="password" 
+                  [(ngModel)]="newEmployee.password" 
+                  required
+                  minlength="6"
+                  placeholder="Enter password (minimum 6 characters)"
+                  #password="ngModel">
+                <div *ngIf="password.invalid && password.touched" class="invalid-feedback d-block">
+                  <small *ngIf="password.errors?.['required']">Password is required</small>
+                  <small *ngIf="password.errors?.['minlength']">Password must be at least 6 characters long</small>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="department" class="form-label">
+                  <i class="material-icons me-1">business</i>
+                  Department *
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control form-control-lg" 
+                  id="department" 
+                  name="department" 
+                  [(ngModel)]="newEmployee.department" 
+                  required
+                  placeholder="Enter department"
+                  #department="ngModel">
+                <div *ngIf="department.invalid && department.touched" class="invalid-feedback d-block">
+                  <small>Department is required</small>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="designation" class="form-label">
+                  <i class="material-icons me-1">work</i>
+                  Designation *
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control form-control-lg" 
+                  id="designation" 
+                  name="designation" 
+                  [(ngModel)]="newEmployee.designation" 
+                  required
+                  placeholder="Enter designation"
+                  #designation="ngModel">
+                <div *ngIf="designation.invalid && designation.touched" class="invalid-feedback d-block">
+                  <small>Designation is required</small>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="form-group">
+                <label for="role" class="form-label">
+                  <i class="material-icons me-1">admin_panel_settings</i>
+                  Role *
+                </label>
+                <select 
+                  class="form-select form-select-lg" 
+                  id="role" 
+                  name="role" 
+                  [(ngModel)]="newEmployee.role" 
+                  required
+                  #role="ngModel">
+                  <option value="">Select a role</option>
+                  <option value="EMPLOYEE">Employee</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
+                <div *ngIf="role.invalid && role.touched" class="invalid-feedback d-block">
+                  <small>Role is required</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-lg" (click)="closeAddEmployeeModal()">
+          <i class="material-icons me-1">close</i>
+          Cancel
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-primary btn-lg" 
+          (click)="addEmployee()"
+          [disabled]="!isAddEmployeeFormValid()">
+          <i class="material-icons me-1">person_add</i>
+          Add Employee
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="selectedRequest && modalAction || showAddEmployeeModal" *ngIf="selectedRequest && modalAction || showAddEmployeeModal"></div>
+
+<!-- Employee Detail Popup Modal -->
+<div class="modal fade" [class.show]="selectedRequestForDetail" [style.display]="selectedRequestForDetail ? 'block' : 'none'" 
+     tabindex="-1" *ngIf="selectedRequestForDetail" (click)="closeEmployeeDetail()">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content employee-detail-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h5 class="modal-title">Leave Request Details</h5>
+        <button type="button" class="btn-close" (click)="closeEmployeeDetail()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="employee-info-section">
+          <div class="employee-avatar">
+            <i class="material-icons">person</i>
+          </div>
+          <div class="employee-details">
+            <h6 class="employee-name">{{ selectedRequestForDetail.employeeName }}</h6>
+            <p class="employee-email">{{ selectedRequestForDetail.employeeEmail }}</p>
+          </div>
+        </div>
+        
+        <div class="leave-details-section">
+          <div class="detail-row">
+            <span class="detail-label">Leave Type:</span>
+            <span class="detail-value">{{ selectedRequestForDetail.leaveType }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Dates:</span>
+            <span class="detail-value">{{ selectedRequestForDetail.startDate | date:'MMM d, y' }} to {{ selectedRequestForDetail.endDate | date:'MMM d, y' }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Total Days:</span>
+            <span class="detail-value">{{ getDaysCount(selectedRequestForDetail.startDate, selectedRequestForDetail.endDate) }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value">
+              <span class="badge" [ngClass]="getStatusClass(selectedRequestForDetail.status || '')">
+                {{ selectedRequestForDetail.status }}
+              </span>
+            </span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Reason:</span>
+            <span class="detail-value reason-text">{{ selectedRequestForDetail.reason }}</span>
+          </div>
+          
+          <div class="detail-row" *ngIf="selectedRequestForDetail.adminComment">
+            <span class="detail-label">Admin Comment:</span>
+            <span class="detail-value comment-text">{{ selectedRequestForDetail.adminComment }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEmployeeDetail()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="selectedRequestForDetail" *ngIf="selectedRequestForDetail"></div>
+
+<!-- Modal Component -->
+<app-modal></app-modal>

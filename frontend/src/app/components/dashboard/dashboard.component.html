@@ -1,0 +1,193 @@
+<div class="dashboard-container">
+  <!-- Navigation Header -->
+  <nav class="navbar navbar-expand-lg custom-toolbar" [class.scrolled]="isScrolled">
+    <div class="container-fluid">
+      <!-- Brand Section -->
+      <div class="navbar-brand-container">
+        <span class="navbar-brand mb-0 h1 d-flex align-items-center">
+          <i class="material-icons md-28">business</i>
+          <span class="d-none d-md-inline">Latrobe Computing</span>
+          <span class="d-md-none">Latrobe Computing</span>
+        </span>
+      </div>
+      
+      <!-- Desktop Navigation - Only visible on large screens -->
+      <div class="d-none d-lg-flex align-items-center">
+        <div class="user-info me-3 text-end">
+          <div class="user-name">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</div>
+          <div class="user-role">
+            <span class="badge bg-light text-dark">{{ currentUser?.role }}</span>
+          </div>
+        </div>
+        <button class="btn btn-outline-light btn-sm glass-button-outline" (click)="logout()">
+          <i class="material-icons md-18">logout</i>
+          Logout
+        </button>
+      </div>
+      
+      <!-- Mobile menu button - Only visible on small screens -->
+      <button class="navbar-toggler d-lg-none" type="button" 
+              (click)="toggleMobileMenu()" 
+              [attr.aria-expanded]="showMobileMenu"
+              [class.active]="showMobileMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <!-- Mobile Navigation - Only visible on small screens when toggled -->
+      <div class="navbar-collapse d-lg-none" [class.show]="showMobileMenu">
+        <div class="mobile-menu-content mt-2">
+          <div class="mobile-user-info mb-3 text-center">
+            <div class="mobile-user-name">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</div>
+            <div class="mobile-user-role">
+              <span class="badge bg-light text-dark">{{ currentUser?.role }}</span>
+            </div>
+          </div>
+          <button class="btn btn-outline-light btn-sm w-100 glass-button-outline" (click)="logout(); toggleMobileMenu()">
+            <i class="material-icons md-18">logout</i>
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container-fluid">
+      <!-- Tab Navigation -->
+      <div class="nav-tabs-container">
+        <ul class="nav nav-tabs mb-4">
+          <li class="nav-item">
+            <button 
+              class="nav-link" 
+              [class.active]="activeTab === 'my-leaves'"
+              (click)="onTabChange('my-leaves')">
+              <i class="material-icons md-20">assignment</i>
+              <span class="d-none d-sm-inline">My Leave Requests</span>
+              <span class="d-sm-none">My Leaves</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button 
+              class="nav-link" 
+              [class.active]="activeTab === 'simple-attendance'"
+              (click)="onTabChange('simple-attendance')">
+              <i class="material-icons md-20">access_time</i>
+              <span class="d-none d-sm-inline">Attendance</span>
+              <span class="d-sm-none">Attendance</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button 
+              class="nav-link" 
+              [class.active]="activeTab === 'apply-leave'"
+              (click)="onTabChange('apply-leave')">
+              <i class="material-icons md-20">add_circle</i>
+              <span class="d-none d-sm-inline">Apply for Leave</span>
+              <span class="d-sm-none">Apply</span>
+            </button>
+          </li>
+          <li class="nav-item" *ngIf="isAdmin()">
+            <button 
+              class="nav-link" 
+              [class.active]="activeTab === 'admin-panel'"
+              (click)="onTabChange('admin-panel')">
+              <i class="material-icons md-20">admin_panel_settings</i>
+              <span class="d-none d-sm-inline">Admin Panel</span>
+              <span class="d-sm-none">Admin</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        <!-- My Leave Requests Tab -->
+        <div *ngIf="activeTab === 'my-leaves'" class="tab-pane active">
+          <div class="row">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">
+                    <i class="material-icons md-24">list</i>
+                    My Leave Requests
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div *ngIf="isLoading" class="text-center">
+                    <div class="spinner-border" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                    </div>
+                  </div>
+                  
+                  <div *ngIf="!isLoading && myLeaveRequests.length === 0" class="text-center py-5">
+                    <i class="material-icons md-48 text-muted">assignment</i>
+                    <h5 class="text-muted mt-3">No leave requests found</h5>
+                    <p class="text-muted">You haven't submitted any leave requests yet.</p>
+                    <button class="btn btn-primary mt-3 glass-button" (click)="onTabChange('apply-leave')">
+                      <i class="material-icons md-18">add</i>
+                      Apply for Leave
+                    </button>
+                  </div>
+                  
+                  <div *ngIf="!isLoading && myLeaveRequests.length > 0">
+                    <div class="row">
+                      <div class="col-12 col-md-6 col-lg-4 mb-4" *ngFor="let request of myLeaveRequests">
+                        <div class="card leave-card h-100">
+                          <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                              <h6 class="card-title mb-0">{{ request.leaveType }}</h6>
+                              <span class="badge" [ngClass]="getStatusClass(request.status || '')">
+                                {{ request.status }}
+                              </span>
+                            </div>
+                            <div class="card-text">
+                              <div class="mb-2">
+                                <strong class="d-block d-sm-inline">Duration:</strong> 
+                                <small class="d-block d-sm-inline">{{ request.startDate | date:'MMM d, y' }} to {{ request.endDate | date:'MMM d, y' }}</small>
+                              </div>
+                              <div class="mb-3">
+                                <strong>Reason:</strong> 
+                                <p class="mt-1 mb-0">{{ request.reason }}</p>
+                              </div>
+                            </div>
+                            <div *ngIf="request.adminComment" class="alert alert-info p-2 mb-3">
+                              <strong>Admin Comment:</strong> {{ request.adminComment }}
+                            </div>
+                            <div *ngIf="request.status === 'PENDING'" class="mt-2">
+                              <button class="btn btn-sm btn-outline-danger" 
+                                      (click)="deleteLeaveRequest(request.id!)">
+                                <i class="material-icons md-16">delete</i>
+                                <span class="d-none d-sm-inline">Delete</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attendance Tab -->
+        <div *ngIf="activeTab === 'simple-attendance'" class="tab-pane active">
+          <app-simple-attendance></app-simple-attendance>
+        </div>
+
+        <!-- Apply for Leave Tab -->
+        <div *ngIf="activeTab === 'apply-leave'" class="tab-pane active">
+          <app-leave-form (leaveSubmitted)="onLeaveRequestSubmitted()"></app-leave-form>
+        </div>        <!-- Admin Panel Tab -->
+        <div *ngIf="activeTab === 'admin-panel' && isAdmin()" class="tab-pane active">
+          <app-admin-panel></app-admin-panel>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Component -->
+<app-modal></app-modal>

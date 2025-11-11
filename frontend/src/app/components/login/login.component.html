@@ -1,0 +1,91 @@
+<div class="login-wrapper">
+  <div class="login-box">
+    <div class="text-center mb-4">
+      <h2 class="login-title d-flex justify-content-center align-items-center">
+        <i class="material-icons me-2">business</i>
+        Latrobe Computing
+      </h2>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <div class="mb-4">
+        <label for="email" class="form-label">
+          <i class="material-icons md-18">email</i>
+          Email
+        </label>
+        <input
+          type="email"
+          class="form-control"
+          id="email"
+          name="email"
+          [(ngModel)]="loginData.email"
+          required
+          email
+          #email="ngModel"
+          placeholder="Enter your email">
+        <div *ngIf="email.invalid && email.touched" class="text-danger">
+          <small *ngIf="email.errors?.['required']" style="color: red;">
+            <i class="material-icons md-14">error</i>
+            Email is required
+          </small>
+          <small *ngIf="email.errors?.['email']" style="color: red;">
+            <i class="material-icons md-14">error</i>
+            Please enter a valid email
+          </small>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label for="password" class="form-label">
+          <i class="material-icons md-18">lock</i>
+          Password
+        </label>
+        <input
+          type="password"
+          class="form-control"
+          id="password"
+          name="password"
+          [(ngModel)]="loginData.password"
+          required
+          minlength="6"
+          #password="ngModel"
+          placeholder="Enter your password">
+        <div *ngIf="password.invalid && password.touched" class="text-danger">
+          <small *ngIf="password.errors?.['required']" style="color: red;">
+            <i class="material-icons md-14">error</i>
+            Password is required
+          </small>
+          <small *ngIf="password.errors?.['minlength']" style="color: red;">
+            <i class="material-icons md-14">error</i>
+            Password must be at least 6 characters
+          </small>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+        <i class="material-icons me-2">error</i>
+        {{ errorMessage }}
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary glass-button"
+        [disabled]="loginForm.invalid || isLoading">
+        <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status"></span>
+        <i *ngIf="!isLoading" class="material-icons">login</i>
+        {{ isLoading ? 'Signing in...' : 'Sign In' }}
+      </button>
+    </form>
+
+    <div class="mt-5 text-center">
+      <small class="text-muted">
+        Demo Credentials:<br>
+        Admin: admin&#64;example.com / Admin&#64;123<br>
+        Employee: employee&#64;example.com / Employee&#64;123
+      </small>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Component -->
+<app-modal></app-modal>

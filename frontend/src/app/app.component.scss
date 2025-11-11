@@ -1,0 +1,82 @@
+/* App component styles */
+
+/* Root container styles */
+:host {
+  display: block;
+  min-height: 100vh;
+  overflow-x: hidden;
+  // Enhanced glass morphism background with more translucency
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  // Remove all padding to eliminate white borders
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// /* Global responsive utilities */
+* {
+  box-sizing: border-box;
+}
+
+/* Prevent horizontal overflow */
+body, html {
+  overflow-x: hidden;
+  // Ensure no margins or padding that could cause white borders
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive font scaling */
+@media (max-width: 480px) {
+  :host {
+    font-size: 14px;
+    // Remove padding that could cause white borders
+    padding: 0 !important;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  :host {
+    font-size: 15px;
+    // Remove padding that could cause white borders
+    padding: 0 !important;
+  }
+}
+
+@media (min-width: 769px) {
+  :host {
+    font-size: 16px;
+    // Remove padding that could cause white borders
+    padding: 0 !important;
+  }
+}
+
+/* Enhanced global hover effects for all interactive elements */
+button, .btn, .card, .navbar, .modal-content, .form-control, .form-select {
+  transition: all 0.4s ease;
+}
+
+button:hover, .btn:hover, .card:hover, .navbar:hover, .modal-content:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(31, 38, 135, 0.3);
+}
+
+/* Ensure all elements have proper hover effects */
+.form-control:hover, .form-select:hover {
+  border-color: rgba(102, 126, 234, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+}
+
+/* Remove any default browser styles that might cause white borders */
+* {
+  outline: none;
+}
+
+/* Ensure all child elements inherit the no-padding rule */
+:host * {
+  padding: 0 !important;
+  margin: 0 !important;
+}

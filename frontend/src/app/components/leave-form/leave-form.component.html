@@ -1,0 +1,144 @@
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10 col-lg-8">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="material-icons md-24">add_circle</i>
+          <span class="d-none d-sm-inline">Apply for Leave</span>
+          <span class="d-sm-none">Apply Leave</span>
+        </h5>
+      </div>
+      <div class="card-body">
+        <!-- Success Message -->
+        <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="material-icons me-2">check_circle</i>
+          {{ successMessage }}
+          <button type="button" class="btn-close" (click)="successMessage = ''"></button>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="material-icons me-2">error</i>
+          {{ errorMessage }}
+          <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+        </div>
+
+        <form (ngSubmit)="onSubmit()" #leaveForm="ngForm">
+          <div class="row">
+            <!-- Leave Type -->
+            <div class="col-12 col-md-6 mb-4">
+              <label for="leaveType" class="form-label">
+                <i class="material-icons md-18">category</i>
+                <span class="d-none d-sm-inline">Leave Type *</span>
+                <span class="d-sm-none">Type *</span>
+              </label>
+              <select
+                class="form-select"
+                id="leaveType"
+                name="leaveType"
+                [(ngModel)]="leaveRequest.leaveType"
+                required
+                #leaveType="ngModel">
+                <option value="">Select leave type</option>
+                <option *ngFor="let type of leaveTypes" [value]="type">{{ type }}</option>
+              </select>
+              <div *ngIf="leaveType.invalid && leaveType.touched" class="text-danger mt-1">
+                <small>Please select a leave type</small>
+              </div>
+            </div>
+
+            <!-- Start Date -->
+            <div class="col-12 col-md-6 mb-4">
+              <label for="startDate" class="form-label">
+                <i class="material-icons md-18">date_range</i>
+                <span class="d-none d-sm-inline">Start Date *</span>
+                <span class="d-sm-none">From *</span>
+              </label>
+              <input
+                type="date"
+                class="form-control"
+                id="startDate"
+                name="startDate"
+                [(ngModel)]="leaveRequest.startDate"
+                [min]="getTodayDate()"
+                required
+                #startDate="ngModel">
+              <div *ngIf="startDate.invalid && startDate.touched" class="text-danger mt-1">
+                <small>Start date is required</small>
+              </div>
+            </div>
+
+            <!-- End Date -->
+            <div class="col-12 col-md-6 mb-4">
+              <label for="endDate" class="form-label">
+                <i class="material-icons md-18">event</i>
+                <span class="d-none d-sm-inline">End Date *</span>
+                <span class="d-sm-none">To *</span>
+              </label>
+              <input
+                type="date"
+                class="form-control"
+                id="endDate"
+                name="endDate"
+                [(ngModel)]="leaveRequest.endDate"
+                [min]="leaveRequest.startDate || getTodayDate()"
+                required
+                #endDate="ngModel">
+              <div *ngIf="endDate.invalid && endDate.touched" class="text-danger mt-1">
+                <small>End date is required</small>
+              </div>
+              <div *ngIf="!isEndDateValid()" class="text-danger mt-1">
+                <small>End date must be after or equal to start date</small>
+              </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="col-12 col-md-6 mb-4">
+              <label for="reason" class="form-label">
+                <i class="material-icons md-18">description</i>
+                Reason *
+              </label>
+              <textarea
+                class="form-control"
+                id="reason"
+                name="reason"
+                rows="3"
+                [(ngModel)]="leaveRequest.reason"
+                required
+                minlength="10"
+                maxlength="500"
+                #reason="ngModel"
+                placeholder="Please provide a reason for your leave request"></textarea>
+              <div *ngIf="reason.invalid && reason.touched" class="text-danger mt-1">
+                <small *ngIf="reason.errors?.['required']">Reason is required</small>
+                <small *ngIf="reason.errors?.['minlength']">Reason must be at least 10 characters</small>
+                <small *ngIf="reason.errors?.['maxlength']">Reason cannot exceed 500 characters</small>
+              </div>
+              <div class="form-text">{{ leaveRequest.reason.length || 0 }}/500 characters</div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-4">
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-responsive glass-button-outline"
+              (click)="resetForm()"
+              [disabled]="isSubmitting">
+              <i class="material-icons md-18">refresh</i>
+              Reset
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary btn-responsive glass-button"
+              [disabled]="leaveForm.invalid || isSubmitting || !isEndDateValid()">
+              <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm" role="status"></span>
+              <i *ngIf="!isSubmitting" class="material-icons md-18">send</i>
+              {{ isSubmitting ? 'Submitting...' : 'Submit Request' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
