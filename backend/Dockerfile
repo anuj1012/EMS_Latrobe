@@ -1,17 +1,4 @@
-# Multi-stage build for production
-FROM maven:3.9-eclipse-temurin-17 AS build
-
-WORKDIR /app
-
-# Copy pom.xml and download dependencies
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
-# Copy source code and build
-COPY src ./src
-RUN mvn clean package -DskipTests
-
-# Production stage
+# Production image using pre-built JAR (built outside Docker to save space)
 FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
@@ -19,8 +6,8 @@ WORKDIR /app
 # Install curl for health checks
 RUN apk add --no-cache curl
 
-# Copy the built jar
-COPY --from=build /app/target/*.jar app.jar
+# Copy the pre-built jar (built by Maven on the host)
+COPY target/*.jar app.jar
 
 # Create non-root user
 RUN addgroup -S appuser && adduser -S -G appuser appuser

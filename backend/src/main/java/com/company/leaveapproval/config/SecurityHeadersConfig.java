@@ -2,7 +2,6 @@ package com.company.leaveapproval.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -25,7 +24,7 @@ public class SecurityHeadersConfig {
                 response.setHeader("X-Content-Type-Options", "nosniff");
                 response.setHeader("X-Frame-Options", "DENY");
                 response.setHeader("X-XSS-Protection", "1; mode=block");
-                response.setHeader("Referrer-Policy", ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN.getValue());
+                response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
                 response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'");
                 response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
                 
@@ -34,6 +33,8 @@ public class SecurityHeadersConfig {
         };
     }
 }
+
+
 
 
 
