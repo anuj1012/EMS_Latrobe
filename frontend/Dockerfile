@@ -1,25 +1,8 @@
-# Multi-stage build for production
-FROM node:18-alpine AS build
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies (including dev dependencies needed for build)
-RUN npm ci
-
-# Copy source code
-COPY . .
-
-# Build the application
-RUN npm run build
-
-# Production stage
+# Production image using pre-built frontend (built outside Docker to save space)
 FROM nginx:alpine
 
-# Copy built application
-COPY --from=build /app/dist/leave-approval-frontend /usr/share/nginx/html
+# Copy pre-built application (built by npm on the host)
+COPY dist/leave-approval-frontend /usr/share/nginx/html
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
